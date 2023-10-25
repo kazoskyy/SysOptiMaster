@@ -5,6 +5,7 @@ import tkinter as tk
 import threading
 import pystray
 from PIL import Image
+from tkinter import PhotoImage
 
 keyboard_blocked = False
 
@@ -16,7 +17,7 @@ def get_cpu_ram_usage():
     cpu_temperature = get_cpu_temperature()
     gpu_usage = get_gpu_usage()
 
-    return f"CPU: {cpu_usage:.1f}% | RAM: {ram_usage:.1f}% | GPU: {gpu_usage}"
+    return f"CPU: {cpu_usage:.1f}% | RAM: {ram_usage:.1f}% | {gpu_usage}"
 
 def get_cpu_temperature():
     try:
@@ -64,25 +65,19 @@ def toggle_keyboard_block():
 
 def block_keyboard(event):
     if keyboard_blocked:
-        return 'break'  
+        return 'break'
     else:
         return None
 
 root = tk.Tk()
-root.title("One menu remake")
+root.title("SysOptiMaster")
 root.attributes('-alpha', 0.7)
-
-root.iconbitmap('SysOptiMaster.png')
 
 cpu_gpu_ram_label = tk.Label(root, text="", font=("Helvetica", 12), justify='left')
 cpu_gpu_ram_label.pack()
 
 info_label = tk.Label(root, text="", font=("Helvetica", 12), justify='left')
 info_label.pack()
-
-info_update_thread = threading.Thread(target=update_info_label)
-info_update_thread.daemon = True
-info_update_thread.start()
 
 keyboard_slider = tk.Scale(root, from_=0, to=1, orient="horizontal", label="Block Keyboard")
 keyboard_slider.pack()
@@ -92,11 +87,19 @@ toggle_button.pack()
 
 root.bind_all('<Key>', block_keyboard)
 
+info_update_thread = threading.Thread(target=update_info_label)
+info_update_thread.daemon = True
+info_update_thread.start()
+
+image = PhotoImage(file="SysOptiMaster.png")
+root.tk.call('wm', 'iconphoto', root._w, image)
+
 system_tray_thread = threading.Thread(target=create_system_tray)
 system_tray_thread.daemon = True
 system_tray_thread.start()
 
 root.mainloop()
+
 
 
 
