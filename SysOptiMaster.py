@@ -83,7 +83,6 @@ root = tk.Tk()
 root.title("SysOptiMaster")
 root.attributes('-alpha', 0.9)  # Corrected
 
-# Set minimum and maximum size to prevent resizing
 root.minsize(400, 200)
 root.maxsize(400, 200)
 
