@@ -2,11 +2,11 @@ import psutil
 import subprocess
 import time
 import tkinter as tk
+import tkinter.ttk as ttk  
 import threading
 import pystray
 from PIL import Image
 from tkinter import PhotoImage
-from tkinter.ttk import Progressbar
 
 keyboard_blocked = False
 
@@ -31,6 +31,18 @@ def get_gpu_usage():
 def get_ssd_usage():
     ssd = psutil.disk_usage('/')
     return ssd.percent
+
+def get_battery_usage():
+    try:
+        battery = psutil.sensors_battery()
+        if battery is not None:
+            percent = battery.percent
+            power_plugged = "Plugged In" if battery.power_plugged else "On Battery"
+            return f"Battery: {percent}% ({power_plugged})"
+        else:
+            return "Battery information not available"
+    except Exception as e:
+        return str(e)
 
 def update_ssd_progress_bar():
     while True:
@@ -60,7 +72,7 @@ def toggle_keyboard_block():
     keyboard_blocked = not keyboard_blocked
 
 def block_keyboard(event):
-    print(f"keyboard_blocked: {keyboard_blocked}")  # Debug print
+    print(f"keyboard_blocked: {keyboard_blocked}")  
     if keyboard_blocked:
         return 'break'
     else:
@@ -73,7 +85,19 @@ def update_progress_bars():
         cpu_bar['value'] = cpu_usage
         ram_bar['value'] = ram_usage
         gpu_bar['value'] = gpu_usage_float
-        # Display usage percentage next to the bars
+        battery_info = get_battery_usage()
+        battery_label.config(text=battery_info)
+        
+        battery_percent = int(battery_info.split(':')[1].split('%')[0])
+        battery_bar['value'] = battery_percent
+        
+        if battery_percent < 40:
+            battery_bar['style'] = 'Red.TProgressbar'
+        elif battery_percent < 60:
+            battery_bar['style'] = 'Yellow.TProgressbar'
+        else:
+            battery_bar['style'] = 'Green.TProgressbar'
+        
         cpu_label.config(text=f"CPU: {cpu_usage:.1f}%")
         ram_label.config(text=f"RAM: {ram_usage:.1f}%")
         gpu_label.config(text=f"GPU: {gpu_usage_float:.1f}%")
@@ -81,10 +105,9 @@ def update_progress_bars():
 
 root = tk.Tk()
 root.title("SysOptiMaster")
-root.attributes('-alpha', 0.9)  # Corrected
-
-root.minsize(400, 200)
-root.maxsize(400, 200)
+root.attributes('-alpha', 0.9)
+root.geometry('400x250')
+root.resizable(False, False)
 
 info_frame = tk.Frame(root)
 info_frame.pack()
@@ -101,20 +124,23 @@ ram_label.grid(row=2, column=0, padx=10, sticky='w')
 ssd_label = tk.Label(info_frame, text="SSD: 0%", font=("Helvetica", 12), justify='left')
 ssd_label.grid(row=3, column=0, padx=10, sticky='w')
 
-info_label = tk.Label(info_frame, text="", font=("Helvetica", 12), justify='left')
-info_label.grid(row=4, column=0, padx=10, sticky='w')
+battery_label = tk.Label(info_frame, text="Battery: 0%", font=("Helvetica", 12), justify='left')
+battery_label.grid(row=4, column=0, padx=10, sticky='w')
 
-ssd_progress_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
+ssd_progress_bar = ttk.Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
 ssd_progress_bar.grid(row=3, column=1, padx=10)
 
-cpu_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
+cpu_bar = ttk.Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
 cpu_bar.grid(row=0, column=1, padx=10)
 
-ram_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
+ram_bar = ttk.Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
 ram_bar.grid(row=2, column=1, padx=10)
 
-gpu_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
+gpu_bar = ttk.Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
 gpu_bar.grid(row=1, column=1, padx=10)
+
+battery_bar = ttk.Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
+battery_bar.grid(row=4, column=1, padx=10)
 
 keyboard_slider = tk.Scale(root, from_=0, to=1, orient="horizontal", label="Block Keyboard")
 keyboard_slider.pack()
@@ -138,5 +164,4 @@ progress_bars_thread = threading.Thread(target=update_progress_bars)
 progress_bars_thread.daemon = True
 progress_bars_thread.start()
 
-root.iconbitmap('SysOptiMaster-logo.ico')
 root.mainloop()
