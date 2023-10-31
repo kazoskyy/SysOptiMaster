@@ -2,11 +2,11 @@ import psutil
 import subprocess
 import time
 import tkinter as tk
-import tkinter.ttk as ttk  
 import threading
 import pystray
 from PIL import Image
 from tkinter import PhotoImage
+from tkinter.ttk import Progressbar
 
 keyboard_blocked = False
 
@@ -91,13 +91,6 @@ def update_progress_bars():
         battery_percent = int(battery_info.split(':')[1].split('%')[0])
         battery_bar['value'] = battery_percent
         
-        if battery_percent < 40:
-            battery_bar['style'] = 'Red.TProgressbar'
-        elif battery_percent < 60:
-            battery_bar['style'] = 'Yellow.TProgressbar'
-        else:
-            battery_bar['style'] = 'Green.TProgressbar'
-        
         cpu_label.config(text=f"CPU: {cpu_usage:.1f}%")
         ram_label.config(text=f"RAM: {ram_usage:.1f}%")
         gpu_label.config(text=f"GPU: {gpu_usage_float:.1f}%")
@@ -106,8 +99,8 @@ def update_progress_bars():
 root = tk.Tk()
 root.title("SysOptiMaster")
 root.attributes('-alpha', 0.9)
-root.geometry('400x250') 
-root.resizable(False, False)
+root.geometry('400x220')  
+root.resizable(False, False)  
 
 info_frame = tk.Frame(root)
 info_frame.pack()
@@ -127,19 +120,20 @@ ssd_label.grid(row=3, column=0, padx=10, sticky='w')
 battery_label = tk.Label(info_frame, text="Battery: 0%", font=("Helvetica", 12), justify='left')
 battery_label.grid(row=4, column=0, padx=10, sticky='w')
 
-ssd_progress_bar = ttk.Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
+ssd_progress_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
 ssd_progress_bar.grid(row=3, column=1, padx=10)
 
-cpu_bar = ttk.Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
+cpu_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
 cpu_bar.grid(row=0, column=1, padx=10)
 
-ram_bar = ttk.Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
+ram_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
 ram_bar.grid(row=2, column=1, padx=10)
 
-gpu_bar = ttk.Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
+gpu_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
 gpu_bar.grid(row=1, column=1, padx=10)
 
-battery_bar = ttk.Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
+# Battery usage bar
+battery_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
 battery_bar.grid(row=4, column=1, padx=10)
 
 keyboard_slider = tk.Scale(root, from_=0, to=1, orient="horizontal", label="Block Keyboard")
