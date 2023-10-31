@@ -99,7 +99,7 @@ def update_progress_bars():
 root = tk.Tk()
 root.title("SysOptiMaster")
 root.attributes('-alpha', 0.9)
-root.geometry('400x220')  
+root.geometry('420x220')  
 root.resizable(False, False)  
 
 info_frame = tk.Frame(root)
