@@ -16,7 +16,8 @@ def get_cpu_ram_usage():
         ram = psutil.virtual_memory()
         ram_usage = ram.percent
         gpu_usage = get_gpu_usage()
-        return cpu_usage, ram_usage, gpu_usage
+        fan_speed = get_fan_speed()
+        return cpu_usage, ram_usage, gpu_usage, fan_speed
     except Exception as e:
         return None, None, str(e)
 
@@ -27,6 +28,14 @@ def get_gpu_usage():
         return f"GPU: {gpu_usage:.1f}%"
     except Exception as e:
         return "No GPU"
+
+def get_fan_speed():
+    try:
+        result = subprocess.run(['nvidia-smi', '--query-gpu=fan.speed', '--format=csv,noheader,nounits'], stdout=subprocess.PIPE, text=True)
+        fan_speed = float(result.stdout.strip())
+        return fan_speed
+    except Exception as e:
+        return 0.0
 
 def get_ssd_usage():
     ssd = psutil.disk_usage('/')
@@ -80,7 +89,7 @@ def block_keyboard(event):
 
 def update_progress_bars():
     while True:
-        cpu_usage, ram_usage, gpu_usage = get_cpu_ram_usage()
+        cpu_usage, ram_usage, gpu_usage, fan_speed = get_cpu_ram_usage()
         gpu_usage_float = float(gpu_usage.split(' ')[-1][:-1]) if "GPU:" in gpu_usage else 0.0
         cpu_bar['value'] = cpu_usage
         ram_bar['value'] = ram_usage
@@ -94,6 +103,8 @@ def update_progress_bars():
         cpu_label.config(text=f"CPU: {cpu_usage:.1f}%")
         ram_label.config(text=f"RAM: {ram_usage:.1f}%")
         gpu_label.config(text=f"GPU: {gpu_usage_float:.1f}%")
+        fan_label.config(text=f"Fan Speed: {fan_speed:.1f}%")
+        fan_bar['value'] = fan_speed
         time.sleep(1)
 
 root = tk.Tk()
@@ -117,8 +128,11 @@ ram_label.grid(row=2, column=0, padx=10, sticky='w')
 ssd_label = tk.Label(info_frame, text="SSD: 0%", font=("Helvetica", 12), justify='left')
 ssd_label.grid(row=3, column=0, padx=10, sticky='w')
 
+fan_label = tk.Label(info_frame, text="Fan Speed: 0%", font=("Helvetica", 12), justify='left')
+fan_label.grid(row=4, column=0, padx=10, sticky='w')
+
 battery_label = tk.Label(info_frame, text="Battery: 0%", font=("Helvetica", 12), justify='left')
-battery_label.grid(row=4, column=0, padx=10, sticky='w')
+battery_label.grid(row=5, column=0, padx=10, sticky='w')
 
 ssd_progress_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
 ssd_progress_bar.grid(row=3, column=1, padx=10)
@@ -132,9 +146,12 @@ ram_bar.grid(row=2, column=1, padx=10)
 gpu_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
 gpu_bar.grid(row=1, column=1, padx=10)
 
-# Battery usage bar
+
 battery_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate")
-battery_bar.grid(row=4, column=1, padx=10)
+battery_bar.grid(row=5, column=1, padx=10)
+
+fan_bar = Progressbar(info_frame, orient="horizontal", length=200, mode="determinate", style='black.Horizontal.TProgressbar')
+fan_bar.grid(row=4, column=1, padx=10)
 
 keyboard_slider = tk.Scale(root, from_=0, to=1, orient="horizontal", label="Block Keyboard")
 keyboard_slider.pack()
@@ -159,3 +176,4 @@ progress_bars_thread.daemon = True
 progress_bars_thread.start()
 
 root.mainloop()
+
